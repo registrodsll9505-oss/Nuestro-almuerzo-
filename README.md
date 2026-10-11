@@ -1,1 +1,142 @@
-# Nuestro-almuerzo-
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Una pregunta para ti 💌</title>
+<style>
+*{box-sizing:border-box;margin:0;-webkit-tap-highlight-color:transparent}
+[hidden]{display:none!important}
+body{min-height:100dvh;display:flex;align-items:center;justify-content:center;padding:24px;
+  font-family:-apple-system,"Helvetica Neue",sans-serif;color:#5a3442;overflow-x:hidden;
+  background:linear-gradient(160deg,#ffe3ec,#fff4e6 55%,#ffd6e0)}
+.caja{position:relative;z-index:1;width:100%;max-width:420px;text-align:center}
+h1{font-family:"Snell Roundhand","Brush Script MT",cursive;font-size:46px;line-height:1.1;color:#d6456b}
+.sub{margin:10px 0 22px;opacity:.8}
+.sobre{font-size:84px;animation:late 1.4s ease-in-out infinite}
+.op{display:flex;align-items:center;gap:14px;width:100%;margin-bottom:12px;padding:16px;
+  font:inherit;font-size:16px;color:inherit;text-align:left;background:rgba(255,255,255,.8);
+  border:2px solid transparent;border-radius:20px;box-shadow:0 6px 18px rgba(214,69,107,.12);
+  transition:transform .15s,border-color .15s}
+.op:active{transform:scale(.97)}
+.op.on{border-color:#d6456b;background:#fff}
+.op b{font-size:30px;font-weight:400}
+#resp{min-height:24px;margin:14px 0;font-weight:600;color:#d6456b}
+#antojo{width:100%;margin-bottom:14px;padding:14px;font:inherit;font-size:16px;color:inherit;
+  border:2px solid #f6b8c8;border-radius:16px;background:#fff;outline:none}
+.btn{width:100%;padding:16px;font:inherit;font-size:17px;font-weight:600;color:#fff;border:0;
+  border-radius:999px;background:linear-gradient(135deg,#ff7a9c,#d6456b);
+  box-shadow:0 8px 20px rgba(214,69,107,.35)}
+#son{position:fixed;top:14px;right:14px;z-index:2;width:44px;height:44px;font-size:20px;
+  border:0;border-radius:50%;background:rgba(255,255,255,.8)}
+.cora{position:fixed;bottom:-40px;z-index:0;font-style:normal;opacity:.55;
+  pointer-events:none;animation:sube linear infinite}
+@keyframes sube{to{transform:translateY(-115vh) rotate(25deg);opacity:0}}
+@keyframes late{50%{transform:scale(1.12)}}
+@media (prefers-reduced-motion:reduce){.cora,.sobre{animation:none}}
+</style>
+</head>
+<body>
+<button id="son" hidden aria-label="Sonido">🔊</button>
+
+<div class="caja" id="inicio">
+  <div class="sobre">💌</div>
+  <h1>Tengo una pregunta para ti</h1>
+  <p class="sub">Es importante (y deliciosa)</p>
+  <button class="btn" id="abrir">Ábreme 💗</button>
+</div>
+
+<div class="caja" id="menu" hidden>
+  <h1>¿Qué almorzamos hoy, mi amor?</h1>
+  <p class="sub">Elige el plan que más te provoque</p>
+  <div id="lista"></div>
+  <p id="resp"></p>
+  <input id="antojo" placeholder="¿Qué se te antoja? 🍕🍣🍔" hidden>
+  <button class="btn" id="enviar" hidden>Enviar mi respuesta 💌</button>
+</div>
+
+<script>
+const NUMERO = "57XXXXXXXXXX"; // tu WhatsApp: 57 + número, sin + ni espacios
+
+const OPCIONES = [
+  { e: "🫘", t: "Cocinemos frijolitos juntos, tú y yo",
+    r: "¡Plan perfecto! Yo pico y tú pruebas 💛" },
+  { e: "🛵", t: "Pidamos lo que a ti se te antoje",
+    r: "Tus antojos mandan ✨", antojo: true },
+  { e: "🌹", t: "Te invito a una cita de almuerzo",
+    r: "Ponte aún más linda, que salimos 🌹" },
+  { e: "👨‍🍳", t: "Hoy te consiento: cocino yo y tú descansas",
+    r: "Tú solo relájate, mi amor 💕" }
+];
+
+const $ = id => document.getElementById(id);
+let sel = null;
+
+// Tarjetas de opciones
+OPCIONES.forEach(o => {
+  const b = document.createElement("button");
+  b.className = "op";
+  b.innerHTML = `<b>${o.e}</b>${o.t}`;
+  b.onclick = () => {
+    sel = o;
+    document.querySelectorAll(".op").forEach(x => x.classList.toggle("on", x === b));
+    $("resp").textContent = o.r;
+    $("antojo").hidden = !o.antojo;
+    $("enviar").hidden = false;
+  };
+  $("lista").appendChild(b);
+});
+
+// Abre WhatsApp con la respuesta ya escrita
+$("enviar").onclick = () => {
+  let m = `Ya elegí nuestro almuerzo 💌\n${sel.e} ${sel.t}`;
+  const a = $("antojo").value.trim();
+  if (sel.antojo && a) m += `\nSe me antoja: ${a}`;
+  location.href = `https://wa.me/${NUMERO}?text=${encodeURIComponent(m)}`;
+};
+
+// Melodía tipo cajita de música
+const NOTAS = [523,659,784,659,587,698,880,698,523,659,784,1047,880,784,659,587];
+let ctx, timer = null, n = 0;
+function nota(f) {
+  const t = ctx.currentTime, o = ctx.createOscillator(), g = ctx.createGain();
+  o.type = "triangle"; o.frequency.value = f;
+  g.gain.setValueAtTime(.0001, t);
+  g.gain.exponentialRampToValueAtTime(.12, t + .02);
+  g.gain.exponentialRampToValueAtTime(.0001, t + 1.2);
+  o.connect(g); g.connect(ctx.destination);
+  o.start(t); o.stop(t + 1.3);
+}
+function musica(on) {
+  clearInterval(timer); timer = null;
+  if (on) {
+    ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+    ctx.resume();
+    timer = setInterval(() => nota(NOTAS[n++ % NOTAS.length]), 420);
+  }
+  $("son").textContent = on ? "🔊" : "🔇";
+}
+$("son").onclick = () => musica(!timer);
+
+// Abrir el sobre
+$("abrir").onclick = () => {
+  $("inicio").hidden = true;
+  $("menu").hidden = false;
+  $("son").hidden = false;
+  musica(true);
+};
+
+// Corazones flotando
+for (let k = 0; k < 12; k++) {
+  const h = document.createElement("i");
+  h.className = "cora";
+  h.textContent = ["💗", "💛", "🌸"][k % 3];
+  h.style.left = Math.random() * 100 + "%";
+  h.style.fontSize = 14 + Math.random() * 16 + "px";
+  h.style.animationDuration = 8 + Math.random() * 8 + "s";
+  h.style.animationDelay = -Math.random() * 10 + "s";
+  document.body.appendChild(h);
+}
+</script>
+</body>
+</html>
